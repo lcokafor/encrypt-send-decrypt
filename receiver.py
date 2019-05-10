@@ -1,6 +1,8 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 import socket
 
 def create_keys(prvkf_n, pubkf_n):
@@ -30,7 +32,7 @@ def create_keys(prvkf_n, pubkf_n):
     return private_key_file, public_key_file
 
 def deserialize_pk(pubkf_n):
-    print("deserialize_pk")
+    print("deserialize_pk()")
     with open(pubkf_n, 'rb') as public_key_file:
         public_key = serialization.load_pem_public_key(
                 public_key_file.read(),
@@ -52,9 +54,6 @@ def send_public_key(sock, pubkf_n):
 def receive_message(sock):
     print("receive_message()")
     encrypted_message, address = sock.recvfrom(1024)
-    while(encrypted_message):
-        encrypted_message, address = sock.recvfrom(1024)
-
     return encrypted_message
 
 def decrypt_message(encrypted_message, prvkf_n):
@@ -80,6 +79,7 @@ def make_socket():
     UDP_PORT = 2001
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((UDP_IP, UDP_PORT))
 
     return sock
