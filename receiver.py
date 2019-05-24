@@ -1,3 +1,8 @@
+"""Asymmetric encryption and sending over network exercise.
+Public key is sent to a 'sender', encrypted message is received from 'sender',
+and message is decrypted using private key. Sending and receiving is done using
+a UDP socket."""
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -6,6 +11,17 @@ from cryptography.hazmat.primitives.asymmetric import padding
 import socket
 
 def create_keys(prvkf_n, pubkf_n):
+    """
+    Generates public and private key and writes them to file.
+
+    Args:
+        prvkf_n: name of private key file
+        pubkf_n: name of public key file
+
+    Returns:
+        private_key_file: private key written to file
+        public_key_file: public key written to file
+    """
     print("create_keys()")
     private_key = rsa.generate_private_key(public_exponent=65537,
                                             key_size=2048,
@@ -32,6 +48,11 @@ def create_keys(prvkf_n, pubkf_n):
     return private_key_file, public_key_file
 
 def deserialize_pk(pubkf_n):
+    """
+    Deserialises public key.
+
+    :param pubkf_n: name of public key file
+    """
     print("deserialize_pk()")
     with open(pubkf_n, 'rb') as public_key_file:
         public_key = serialization.load_pem_public_key(
@@ -41,6 +62,13 @@ def deserialize_pk(pubkf_n):
 
 
 def send_public_key(sock, pubkf_n):
+    """
+    Sends public key using UDP to chosen port.
+
+    Args:
+        sock: sending socket
+        pubkf_n: name of public key file
+    """
     print("send_public_key()")
     UDP_IP = "127.0.0.1"
     SEND_PORT = 2000
@@ -52,11 +80,30 @@ def send_public_key(sock, pubkf_n):
             datagram = public_key_file.read(1024)
 
 def receive_message(sock):
+    """
+    Receives message from socket using UDP.
+
+    Args:
+        sock: receiving socket
+
+    Returns:
+        encrypted message: message received through socket
+    """
     print("receive_message()")
     encrypted_message, address = sock.recvfrom(1024)
     return encrypted_message
 
 def decrypt_message(encrypted_message, prvkf_n):
+    """
+    Decrypts received message.
+
+    Args:
+        encrypted_message: message encrypted with public key by sender
+        prvkf_n: name of private key file
+
+    Returns:
+        message: decrypted message
+    """
     print("decrypt_message()")
     with open(prvkf_n, 'rb') as private_key_file:
         private_key = serialization.load_pem_private_key(
@@ -74,6 +121,11 @@ def decrypt_message(encrypted_message, prvkf_n):
         return message
 
 def make_socket():
+    """
+    Makes socket and binds it to chosen port. Port address is reusable to make
+    repeated uses of program easier. Things can only be sent back and forth
+    on same network since IP address is 127.0.0.1.
+    """
     print("make_socket()")
     UDP_IP = "127.0.0.1"
     UDP_PORT = 2001
